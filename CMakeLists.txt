@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-project(ex1)
+project(tinyrenderer)
 
 include_directories(
   lib/
@@ -13,9 +13,9 @@ link_directories(
 
 add_definitions(-DSRC_PATH=\"${CMAKE_SOURCE_DIR}/\")
 
-add_executable(basics 
+add_executable(tinyrenderer
         main.cpp
         lib/tgaimage.cpp
         common/drawer.cpp
 )
-target_link_libraries(basics ${CL_LIBRARIES})
+target_link_libraries(tinyrenderer ${CL_LIBRARIES})
