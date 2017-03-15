@@ -11,9 +11,11 @@ const TGAColor green = TGAColor(0, 255, 0, 255);
 int main(){
 
     TGAImage image(100, 100, TGAImage::RGB);
+    image.clear(white);
+
     Drawer::line(13, 20, 80, 40, image, white);
     Drawer::line(20, 13, 40, 80, image, red);
-    Drawer::line(0, 0, 53, 40, image, blue);
+    Drawer::line(20, 20, 20, 80, image, blue);
     image.flip_vertically();
     image.write_tga_file("output.tga");
 

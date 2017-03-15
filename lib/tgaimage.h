@@ -92,6 +92,7 @@ public:
     int get_bytespp();
     unsigned char *buffer();
     void clear();
+    void clear(const TGAColor &c);
 };
 
 #endif //__IMAGE_H__
