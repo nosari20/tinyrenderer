@@ -1,5 +1,5 @@
 #include "drawer.h"
-#include <cmath>
+#include <math.h>
 #include <utility>
 #include "../lib/tgaimage.h"
 
@@ -53,21 +53,31 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
     if (ct0.y>ct1.y) std::swap(ct0, ct1);
     if (ct0.y>ct2.y) std::swap(ct0, ct2);
     if (ct1.y>ct2.y) std::swap(ct1, ct2);
-
     int total_height = ct2.y-ct0.y;
-    for (int y=ct0.y; y<=ct1.y; y++) {
-        int segment_height = ct1.y-ct0.y+1;
-        float alpha = (float)(y-ct0.y)/total_height;
-        float beta  = (float)(y-ct0.y)/segment_height; // be careful with divisions by zero
-        Vec2i A = ct0 + (ct2-ct0)*alpha;
-        Vec2i B = ct0 + (ct1-ct0)*beta;
-        image.set(A.x, y, red);
-        image.set(B.x, y, green);
+    if(total_height > 0){
+        for (int y=ct0.y; y<=ct1.y; y++) {
+            int segment_height = ct1.y-ct0.y+1;
+            float alpha = (float)(y-ct0.y)/total_height;
+            float beta  = (float)(y-ct0.y)/segment_height;
+            Vec2i A = ct0 + (ct2-ct0)*alpha;
+            Vec2i B = ct0 + (ct1-ct0)*beta;
+            if (A.x>B.x) std::swap(A, B);
+            for (int j=A.x; j<=B.x; j++) {
+                image.set(j, y, color);
+            }
+        }
+        for (int y=ct1.y; y<=ct2.y; y++) {
+            int segment_height =  ct2.y-ct1.y+1;
+            float alpha = (float)(y-ct0.y)/total_height;
+            float beta  = (float)(y-ct1.y)/segment_height;
+            Vec2i A = ct0 + (ct2-ct0)*alpha;
+            Vec2i B = ct1 + (ct2-ct1)*beta;
+            if (A.x>B.x) std::swap(A, B);
+            for (int j=A.x; j<=B.x; j++) {
+                image.set(j, y, color);
+            }
+        }
     }
 
-    /*
-    Drawer::line(ct0, ct1, image, color);
-    Drawer::line(ct1, ct2, image, color);
-    Drawer::line(ct2, ct0, image, color);
-    */
+
 }
