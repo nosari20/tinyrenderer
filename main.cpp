@@ -13,9 +13,9 @@ int main(){
     TGAImage image(100, 100, TGAImage::RGB);
     image.clear(white);
 
-    Drawer::line(13, 20, 80, 40, image, white);
-    Drawer::line(20, 13, 40, 80, image, red);
-    Drawer::line(20, 20, 20, 80, image, blue);
+    Drawer::line(0, 100, 100, 0, image, green);
+    Drawer::line(0, 0, 100, 80, image, red);
+    Drawer::line(80, 40, 13, 20, image, blue);
     image.flip_vertically();
     image.write_tga_file("output.tga");
 
