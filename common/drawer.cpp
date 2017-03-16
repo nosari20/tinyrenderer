@@ -1,6 +1,12 @@
 #include "drawer.h"
 #include <cmath>
 #include <utility>
+#include "../lib/tgaimage.h"
+
+const TGAColor white = TGAColor(255, 255, 255, 255);
+const TGAColor red   = TGAColor(255, 0,   0,   255);
+const TGAColor green   = TGAColor(0, 255,   0,   255);
+const TGAColor blue   = TGAColor(0, 0,   255,   255);
 
 Drawer::Drawer()
 {
@@ -48,7 +54,20 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
     if (ct0.y>ct2.y) std::swap(ct0, ct2);
     if (ct1.y>ct2.y) std::swap(ct1, ct2);
 
+    int total_height = ct2.y-ct0.y;
+    for (int y=ct0.y; y<=ct1.y; y++) {
+        int segment_height = ct1.y-ct0.y+1;
+        float alpha = (float)(y-ct0.y)/total_height;
+        float beta  = (float)(y-ct0.y)/segment_height; // be careful with divisions by zero
+        Vec2i A = ct0 + (ct2-ct0)*alpha;
+        Vec2i B = ct0 + (ct1-ct0)*beta;
+        image.set(A.x, y, red);
+        image.set(B.x, y, green);
+    }
+
+    /*
     Drawer::line(ct0, ct1, image, color);
     Drawer::line(ct1, ct2, image, color);
     Drawer::line(ct2, ct0, image, color);
+    */
 }
