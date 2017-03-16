@@ -20,7 +20,7 @@ void Drawer::line(const int x0, const int y0, const int x1, const int y1, TGAIma
     }
     int dx = cx1 - cx0;
     int dy = cy1 - cy0;
-    float derror = std::abs(dy/float(dx));
+    float derror = std::abs(dy)*2;
     float error = 0;
     int y = cy0;
     for (int x = cx0; x <= cx1; x++) {
@@ -30,9 +30,9 @@ void Drawer::line(const int x0, const int y0, const int x1, const int y1, TGAIma
             image.set(x, y, color);
         }
         error += derror;
-        if (error>.5) {
+        if (error > dx) {
             y += (cy1 > cy0 ? 1 : -1);
-            error -= 1.;
+            error -= dx * 2;
         }
     }
 }
