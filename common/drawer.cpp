@@ -42,7 +42,13 @@ void Drawer::line(const Vec2i t0, const Vec2i t1, TGAImage &image, const TGAColo
 }
 
 void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &image, const TGAColor color) {
-    Drawer::line(t0, t1, image, color);
-    Drawer::line(t1, t2, image, color);
-    Drawer::line(t2, t0, image, color);
+    Vec2i ct0 = t0, ct1 = t1, ct2 = t2;
+
+    if (ct0.y>ct1.y) std::swap(ct0, ct1);
+    if (ct0.y>ct2.y) std::swap(ct0, ct2);
+    if (ct1.y>ct2.y) std::swap(ct1, ct2);
+
+    Drawer::line(ct0, ct1, image, color);
+    Drawer::line(ct1, ct2, image, color);
+    Drawer::line(ct2, ct0, image, color);
 }
