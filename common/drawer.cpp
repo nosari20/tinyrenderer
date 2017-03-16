@@ -36,3 +36,13 @@ void Drawer::line(const int x0, const int y0, const int x1, const int y1, TGAIma
         }
     }
 }
+
+void Drawer::line(const Vec2i t0, const Vec2i t1, TGAImage &image, const TGAColor color){
+    Drawer::line(t0[0], t0[1], t1[0], t1[1], image, color);
+}
+
+void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &image, const TGAColor color) {
+    Drawer::line(t0, t1, image, color);
+    Drawer::line(t1, t2, image, color);
+    Drawer::line(t2, t0, image, color);
+}
