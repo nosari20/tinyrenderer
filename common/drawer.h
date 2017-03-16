@@ -7,7 +7,7 @@ class Drawer
 {
 public:
     Drawer();
-    static void line(const int x0, const int y0, const int x1, const int y1, TGAImage &image, TGAColor color);
+    static void line(const int x0, const int y0, const int x1, const int y1, TGAImage &image, const TGAColor color);
 };
 
 #endif // DRAWER_H

@@ -15,7 +15,11 @@ add_definitions(-DSRC_PATH=\"${CMAKE_SOURCE_DIR}/\")
 
 add_executable(tinyrenderer
         main.cpp
-        lib/tgaimage.cpp
         common/drawer.cpp
+
+        #ssloy files
+        lib/tgaimage.cpp
+        lib/model.cpp
+        lib/geometry.cpp
 )
 target_link_libraries(tinyrenderer ${CL_LIBRARIES})
