@@ -48,7 +48,7 @@ void Drawer::line(const Vec2i t0, const Vec2i t1, TGAImage &image, const TGAColo
 }
 
 void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &image, const TGAColor color) {
-    Vec2i ct0 = t0, ct1 = t1, ct2 = t2;
+    //Vec2i ct0 = t0, ct1 = t1, ct2 = t2;
 
     Vec2i bboxmin(image.get_width()-1,  image.get_height()-1);
     Vec2i bboxmax(0, 0);
@@ -97,22 +97,42 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
             )
             );
 
-    auto barycentric = [](Vec2i p, Vec2i p0, Vec2i p1, Vec2i p2) -> Vec3f{
+    auto in_triangle = [](Vec2i p, Vec2i p0, Vec2i p1, Vec2i p2) -> bool{
 
-        double d = (p0.x-p2.x)*(p1.y-p2.y) - (p1.x-p2.x)*(p0.y-p2.y);
+        Vec3f u = Vec3f(p1.x-p0.x, p1.y-p0.y, 0);
+        Vec3f v = Vec3f(p2.x-p0.x, p2.y-p0.y, 0);
+        Vec3f w = Vec3f(p.x-p0.x, p.y-p0.y, 0);
 
-        double a = (1/d)*((p1.y-p2.y)*(p.x-p2.x) + (p2.x-p1.x)*(p.y-p2.y));
-        double b = (1/d)*((p2.y-p0.y)*(p.x-p2.x) + (p0.x-p2.x)*(p.y-p2.y));
+        Vec3f vw = cross(v,w);
+        Vec3f vu = cross(v,u);
 
-        return Vec3f(a,b,1-a-b);
+        if (dot(vw, vu) < 0)
+            return false;
+
+
+        Vec3f uw = cross(u,w);
+        Vec3f uv = cross(u,v);
+        if (dot(uw, uv) < 0)
+            return false;
+
+
+        double luv = sqrt(pow(uv.x,2)+pow(uv.y,2)+pow(uv.z,2));
+        double lvw = sqrt(pow(vw.x,2)+pow(vw.y,2)+pow(vw.z,2));
+        double luw = sqrt(pow(uw.x,2)+pow(uw.y,2)+pow(uw.z,2));
+
+        float denom = luv;
+        float r = lvw / denom;
+        float t = luw / denom;
+
+
+        return (r + t <= 1);
     };
 
 
     Vec2i P;
     for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
         for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
-            Vec3f bc_screen  = barycentric(P, ct0, ct1, ct2);
-            if (bc_screen.x>=0 && bc_screen.y>=0 && bc_screen.z>=0)
+            if (in_triangle(P,t0,t1,t2))
                 image.set(P.x, P.y, color);
         }
     }
