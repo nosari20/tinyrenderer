@@ -55,69 +55,66 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
 
     bboxmin[0] = std::min(
                 bboxmin[0],
-                std::min(
-                    t0[0],
-                    std::min(
-                        t1[0],
-                        t2[0]
-                    )
-                )
+            std::min(
+                t0[0],
+            std::min(
+                t1[0],
+            t2[0]
+            )
+            )
             );
 
     bboxmin[1] = std::min(
                 bboxmin[1],
-                std::min(
-                    t0[1],
-                    std::min(
-                        t1[1],
-                        t2[1]
-                    )
-                )
+            std::min(
+                t0[1],
+            std::min(
+                t1[1],
+            t2[1]
+            )
+            )
             );
 
     bboxmax[0] = std::max(
                 bboxmax[0],
-                std::max(
-                    t0[0],
-                    std::max(
-                        t1[0],
-                        t2[0]
-                    )
-                )
+            std::max(
+                t0[0],
+            std::max(
+                t1[0],
+            t2[0]
+            )
+            )
             );
 
     bboxmax[1] = std::max(
                 bboxmax[1],
-                std::max(
-                    t0[1],
-                    std::max(
-                        t1[1],
-                        t2[1]
-                    )
-                )
+            std::max(
+                t0[1],
+            std::max(
+                t1[1],
+            t2[1]
+            )
+            )
             );
+
+    auto barycentric = [](Vec2i p, Vec2i p0, Vec2i p1, Vec2i p2) -> Vec3f{
+
+        double d = (p0.x-p2.x)*(p1.y-p2.y) - (p1.x-p2.x)*(p0.y-p2.y);
+
+        double a = (1/d)*((p1.y-p2.y)*(p.x-p2.x) + (p2.x-p1.x)*(p.y-p2.y));
+        double b = (1/d)*((p2.y-p0.y)*(p.x-p2.x) + (p0.x-p2.x)*(p.y-p2.y));
+
+        return Vec3f(a,b,1-a-b);
+    };
 
 
     Vec2i P;
     for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
         for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
-            if (Drawer::in_triangle(P,ct0,ct1,ct2))
+            Vec3f bc_screen  = barycentric(P, ct0, ct1, ct2);
+            if (bc_screen.x>=0 && bc_screen.y>=0 && bc_screen.z>=0)
                 image.set(P.x, P.y, color);
         }
     }
 
-}
-
-
-bool Drawer::in_triangle(const Vec2i p,const Vec2i t0, const Vec2i t1, const Vec2i t2){
-    int as_x = p[0]-t0[0];
-    int as_y = p[1]-t0[1];
-
-    bool s_ab = (t1[0]-t0[0])*as_y-(t1[1]-t0[1])*as_x > 0;
-
-    if((t2[0]-t0[0])*as_y-(t2[1]-t0[1])*as_x > 0 == s_ab) return false;
-
-    if((t2[0]-t1[0])*(p[1]-t1[1])-(t2[1]-t1[1])*(p[0]-t1[0]) > 0 != s_ab) return false;
-
-    return true;
 }
