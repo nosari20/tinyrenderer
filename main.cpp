@@ -1,4 +1,9 @@
 #include <iostream>
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <time.h>
 #include "lib/tgaimage.h"
 #include "model.h"
 #include "geometry.h"
@@ -10,11 +15,13 @@ const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green   = TGAColor(0, 255,   0,   255);
 const TGAColor blue   = TGAColor(0, 0,   255,   255);
 Model *model = NULL;
-const int width  = 200;
-const int height = 200;
+const int width  = 800;
+const int height = 800;
+
+
 
 int main(int argc, char** argv){
-    /*
+
     if(2 == argc) {
         model = new Model(argv[1]);
     } else {
@@ -22,27 +29,26 @@ int main(int argc, char** argv){
     }
 
     TGAImage image(width, height, TGAImage::RGB);
+
+
     for (int i=0; i<model->nfaces(); i++) {
         std::vector<int> face = model->face(i);
+        Vec2i screen_coords[3];
         for (int j=0; j<3; j++) {
-            Vec3f v0 = model->vert(face[j]);
-            Vec3f v1 = model->vert(face[(j+1)%3]);
-            int x0 = (v0.x+1.)*width/2.;
-            int y0 = (v0.y+1.)*height/2.;
-            int x1 = (v1.x+1.)*width/2.;
-            int y1 = (v1.y+1.)*height/2.;
-            Drawer::line(x0, y0, x1, y1, image, white);
+            Vec3f world_coords = model->vert(face[j]);
+            screen_coords[j] = Vec2i((world_coords.x+1.)*width/2., (world_coords.y+1.)*height/2.);
         }
+         Drawer::triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(rand()%255, rand()%255, rand()%255, 255));
     }
 
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
     delete model;
     return 0;
-    */
 
-    TGAImage image(width, height, TGAImage::RGB);
 
+
+/*
     Vec2i t0[3] = {Vec2i(10, 70),   Vec2i(50, 160),  Vec2i(70, 80)};
     Vec2i t1[3] = {Vec2i(180, 50),  Vec2i(150, 1),   Vec2i(70, 180)};
     Vec2i t2[3] = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
@@ -55,9 +61,6 @@ int main(int argc, char** argv){
 
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
-    return 0;
-
-
-
+    return 0;*/
 
 }

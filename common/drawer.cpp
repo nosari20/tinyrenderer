@@ -50,34 +50,74 @@ void Drawer::line(const Vec2i t0, const Vec2i t1, TGAImage &image, const TGAColo
 void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &image, const TGAColor color) {
     Vec2i ct0 = t0, ct1 = t1, ct2 = t2;
 
-    if (ct0.y>ct1.y) std::swap(ct0, ct1);
-    if (ct0.y>ct2.y) std::swap(ct0, ct2);
-    if (ct1.y>ct2.y) std::swap(ct1, ct2);
-    int total_height = ct2.y-ct0.y;
-    if(total_height > 0){
-        for (int y=ct0.y; y<=ct1.y; y++) {
-            int segment_height = ct1.y-ct0.y+1;
-            float alpha = (float)(y-ct0.y)/total_height;
-            float beta  = (float)(y-ct0.y)/segment_height;
-            Vec2i A = ct0 + (ct2-ct0)*alpha;
-            Vec2i B = ct0 + (ct1-ct0)*beta;
-            if (A.x>B.x) std::swap(A, B);
-            for (int j=A.x; j<=B.x; j++) {
-                image.set(j, y, color);
-            }
-        }
-        for (int y=ct1.y; y<=ct2.y; y++) {
-            int segment_height =  ct2.y-ct1.y+1;
-            float alpha = (float)(y-ct0.y)/total_height;
-            float beta  = (float)(y-ct1.y)/segment_height;
-            Vec2i A = ct0 + (ct2-ct0)*alpha;
-            Vec2i B = ct1 + (ct2-ct1)*beta;
-            if (A.x>B.x) std::swap(A, B);
-            for (int j=A.x; j<=B.x; j++) {
-                image.set(j, y, color);
-            }
+    Vec2i bboxmin(image.get_width()-1,  image.get_height()-1);
+    Vec2i bboxmax(0, 0);
+
+    bboxmin[0] = std::min(
+                bboxmin[0],
+                std::min(
+                    t0[0],
+                    std::min(
+                        t1[0],
+                        t2[0]
+                    )
+                )
+            );
+
+    bboxmin[1] = std::min(
+                bboxmin[1],
+                std::min(
+                    t0[1],
+                    std::min(
+                        t1[1],
+                        t2[1]
+                    )
+                )
+            );
+
+    bboxmax[0] = std::max(
+                bboxmax[0],
+                std::max(
+                    t0[0],
+                    std::max(
+                        t1[0],
+                        t2[0]
+                    )
+                )
+            );
+
+    bboxmax[1] = std::max(
+                bboxmax[1],
+                std::max(
+                    t0[1],
+                    std::max(
+                        t1[1],
+                        t2[1]
+                    )
+                )
+            );
+
+
+    Vec2i P;
+    for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
+        for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
+            if (Drawer::in_triangle(P,ct0,ct1,ct2))
+                image.set(P.x, P.y, color);
         }
     }
 
+}
 
+
+bool Drawer::in_triangle(const Vec2i p,const Vec2i t0, const Vec2i t1, const Vec2i t2){
+    int as_x = p[0]-t0[0];
+    int as_y = p[1]-t0[1];
+
+    bool s_ab = (t1[0]-t0[0])*as_y-(t1[1]-t0[1])*as_x > 0;
+
+    if((t2[0]-t0[0])*as_y-(t2[1]-t0[1])*as_x > 0 == s_ab) return false;
+
+    if((t2[0]-t1[0])*(p[1]-t1[1])-(t2[1]-t1[1])*(p[0]-t1[0]) > 0 != s_ab) return false;
+
+    return true;
 }
