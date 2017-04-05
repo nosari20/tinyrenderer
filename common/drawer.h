@@ -3,6 +3,7 @@
 
 #include "../lib/tgaimage.h"
 #include "../lib/geometry.h"
+#include "../lib/model.h"
 
 class Drawer
 {
@@ -13,6 +14,7 @@ public:
     static void triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &image, const TGAColor color);
     static void triangle(const Vec2f *pts, TGAImage &image, const TGAColor color);
     static void triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TGAColor color);
+    static void triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, Model *model, const float intensity);
 };
 
 #endif // DRAWER_H

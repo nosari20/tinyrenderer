@@ -50,13 +50,10 @@ int main(int argc, char** argv) {
 
         Vec3f n = cross((pts_w[2]-pts_w[0]),(pts_w[1]-pts_w[0]));
         n.normalize();
-        float intensity = dot(n,light_dir);
-
-        if (intensity>0) {
-            Drawer::triangle(pts_s, zbuffer, image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-        }
+        float intensity = n*light_dir;
+        if (intensity>0)
+            Drawer::triangle(pts_s, zbuffer, image, model, intensity);
     }
-
     image.flip_vertically();
     image.write_tga_file("output.tga");
     delete model;

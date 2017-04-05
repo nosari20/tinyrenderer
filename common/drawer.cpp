@@ -194,6 +194,7 @@ void Drawer::triangle(const Vec2f *pts, TGAImage &image, const TGAColor color){
     }
 }
 
+
 void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TGAColor color){
     Vec2f size(image.get_width()-1, image.get_height()-1);
     Vec2f bboxmin(size.x,  size.y);
@@ -206,7 +207,10 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
         bboxmax.y = std::max(bboxmax.y, pts[i].y);
     }
 
-    auto in_triangle = [](Vec3f p, Vec3f p0, Vec3f p1, Vec3f p2) -> bool{
+
+    auto in_triangle = [](Vec3f p, Vec3f p0, Vec3f p1, Vec3f p2, Vec3f &bc) -> bool{
+
+        bc = Vec3f(0,0,0);
 
         Vec3f u = Vec3f(p1.x-p0.x, p1.y-p0.y, 0);
         Vec3f v = Vec3f(p2.x-p0.x, p2.y-p0.y, 0);
@@ -233,15 +237,22 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
         float r = lvw / denom;
         float t = luw / denom;
 
+        bc = Vec3f(1-r-t, r, t);
 
         return (r + t <= 1);
     };
 
 
+
     Vec3f P;
     for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
         for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
-            if (in_triangle(P,pts[0],pts[1],pts[2])){
+            Vec3f ptscopy[3];
+            for (int i=0; i<3; i++) ptscopy[i] = Vec3f(pts[i].x, pts[i].y, 0);
+            P.z = 0;
+            Vec3f bc;
+            if (in_triangle(P,ptscopy[0],ptscopy[1],ptscopy[2],bc)) {
+                for (int i=0; i<3; i++) P.z += bc[i]*pts[i].z;
                 if(P.z > zbuffer[int(P.x+P.y*size.x)]){
                     zbuffer[int(P.x+P.y*size.x)] = P.z;
                     image.set(P.x, P.y, color);
@@ -249,5 +260,75 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
             }
         }
     }
+}
+
+void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, Model *model, const float intensity){
+    Vec2f size(image.get_width()-1, image.get_height()-1);
+    Vec2f bboxmin(size.x,  size.y);
+    Vec2f bboxmax(0, 0);;
+    for (int i=0; i<3; i++) {
+        bboxmin.x = std::min(bboxmin.x, pts[i].x);
+        bboxmin.y = std::min(bboxmin.y, pts[i].y);
+
+        bboxmax.x = std::max(bboxmax.x, pts[i].x);
+        bboxmax.y = std::max(bboxmax.y, pts[i].y);
+    }
+
+    auto in_triangle = [](Vec3f p, Vec3f p0, Vec3f p1, Vec3f p2, Vec3f &bc) -> bool{
+
+        bc = Vec3f(0,0,0);
+
+        Vec3f u = Vec3f(p1.x-p0.x, p1.y-p0.y, 0);
+        Vec3f v = Vec3f(p2.x-p0.x, p2.y-p0.y, 0);
+        Vec3f w = Vec3f(p.x-p0.x, p.y-p0.y, 0);
+
+        Vec3f vw = cross(v,w);
+        Vec3f vu = cross(v,u);
+
+        if (dot(vw, vu) < 0)
+            return false;
+
+
+        Vec3f uw = cross(u,w);
+        Vec3f uv = cross(u,v);
+        if (dot(uw, uv) < 0)
+            return false;
+
+
+        double luv = sqrt(pow(uv.x,2)+pow(uv.y,2)+pow(uv.z,2));
+        double lvw = sqrt(pow(vw.x,2)+pow(vw.y,2)+pow(vw.z,2));
+        double luw = sqrt(pow(uw.x,2)+pow(uw.y,2)+pow(uw.z,2));
+
+        float denom = luv;
+        float r = lvw / denom;
+        float t = luw / denom;
+
+        bc = Vec3f(1-r-t, r, t);
+
+        return (r + t <= 1);
+    };
+
+
+
+    Vec3f P;
+    for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
+        for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
+            Vec3f ptscopy[3];
+            for (int i=0; i<3; i++) ptscopy[i] = Vec3f(pts[i].x, pts[i].y, 0);
+            P.z = 0;
+            Vec3f bc;
+            if (in_triangle(P,ptscopy[0],ptscopy[1],ptscopy[2],bc)) {
+                for (int i=0; i<3; i++) P.z += bc[i]*pts[i].z;
+                if(P.z > zbuffer[int(P.x+P.y*size.x)]){
+                    zbuffer[int(P.x+P.y*size.x)] = P.z;
+
+                    TGAColor oc = model->diffuse(Vec2i(1000,1000));
+                    image.set(P.x, P.y, oc*intensity);
+
+                }
+            }
+        }
+    }
+
 }
 
