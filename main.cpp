@@ -34,7 +34,7 @@ int main(int argc, char** argv){
     Vec3f light_dir(0,0,-1);
     for (int i=0; i<model->nfaces(); i++) {
         std::vector<int> face = model->face(i);
-        Vec2i screen_coords[3];
+        Vec2f screen_coords[3];
         Vec3f world_coords[3];
         for (int j=0; j<3; j++) {
             Vec3f v = model->vert(face[j]);
@@ -45,7 +45,7 @@ int main(int argc, char** argv){
         n.normalize();
         float intensity = n*light_dir;
         if (intensity>0) {
-            Drawer::triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+            Drawer::triangle(screen_coords, image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
         }
     }
 

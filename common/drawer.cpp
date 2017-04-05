@@ -139,19 +139,19 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
 
 }
 
-/*
-void Drawer::triangle(const Vec2f pts, float *z_buffer, TGAImage &image, const TGAColor color){
-    Vec2i bboxmin(image.get_width()-1,  image.get_height()-1);
-    Vec2i bboxmax(0, 0);;
+
+void Drawer::triangle(const Vec2f *pts, TGAImage &image, const TGAColor color){
+    Vec2f bboxmin(image.get_width()-1,  image.get_height()-1);
+    Vec2f bboxmax(0, 0);;
     for (int i=0; i<3; i++) {
         bboxmin.x = std::min(bboxmin.x, pts[i].x);
-        bboxmin.x = std::min(bboxmin.y, pts[i].y);
+        bboxmin.y = std::min(bboxmin.y, pts[i].y);
 
         bboxmax.x = std::max(bboxmax.x, pts[i].x);
-        bboxmax.x = std::min(bboxmax.y, pts[i].y);
+        bboxmax.y = std::max(bboxmax.y, pts[i].y);
     }
 
-    auto in_triangle = [](Vec2i p, Vec2i p0, Vec2i p1, Vec2i p2) -> bool{
+    auto in_triangle = [](Vec2f p, Vec2f p0, Vec2f p1, Vec2f p2) -> bool{
 
         Vec3f u = Vec3f(p1.x-p0.x, p1.y-p0.y, 0);
         Vec3f v = Vec3f(p2.x-p0.x, p2.y-p0.y, 0);
@@ -183,15 +183,15 @@ void Drawer::triangle(const Vec2f pts, float *z_buffer, TGAImage &image, const T
     };
 
 
-    Vec3f P;
+    Vec2f P;
     for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
         for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
-            if (in_triangle(P,t0,t1,t2)){
+            if (in_triangle(P,pts[0],pts[1],pts[2])){
                 image.set(P.x, P.y, color);
             }
 
         }
     }
 }
-*/
+
 
