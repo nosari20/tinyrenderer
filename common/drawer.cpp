@@ -139,7 +139,7 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
 
 }
 
-
+/*
 void Drawer::triangle(const Vec2f pts, float *z_buffer, TGAImage &image, const TGAColor color){
     Vec2i bboxmin(image.get_width()-1,  image.get_height()-1);
     Vec2i bboxmax(0, 0);;
@@ -193,3 +193,5 @@ void Drawer::triangle(const Vec2f pts, float *z_buffer, TGAImage &image, const T
         }
     }
 }
+*/
+

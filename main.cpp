@@ -17,41 +17,40 @@ const TGAColor green   = TGAColor(0, 255,   0,   255);
 const TGAColor blue   = TGAColor(0, 0,   255,   255);
 Model *model = NULL;
 const int width  = 800;
-const int height = 500;
+const int height = 800;
 
-void rasterize(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color, int ybuffer[]) {
-    if (p0.x>p1.x) {
-        std::swap(p0, p1);
-    }
-    for (int x=p0.x; x<=p1.x; x++) {
-        float t = (x-p0.x)/(float)(p1.x-p0.x);
-        int y = p0.y*(1.-t) + p1.y*t;
-        if (ybuffer[x]<y) {
-            ybuffer[x] = y;
-            image.set(x, 0, color);
-        }
-    }
-}
 
 
 
 int main(int argc, char** argv){
 
-    { // just dumping the 2d scene (yay we have enough dimensions!)
-        TGAImage scene(width, height, TGAImage::RGB);
-
-        int *zbuffer = new int[width*height];
-
-        int ybuffer[width];
-        for (int i=0; i<width; i++) {
-            ybuffer[i] = std::numeric_limits<int>::min();
-        }
-        rasterize(Vec2i(20, 34),   Vec2i(744, 400), scene, red,   ybuffer);
-        rasterize(Vec2i(120, 434), Vec2i(444, 400), scene, green, ybuffer);
-        rasterize(Vec2i(330, 463), Vec2i(594, 200), scene, blue,  ybuffer);
-
-        scene.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-        scene.write_tga_file("scene.tga");
+    if (2==argc) {
+        model = new Model(argv[1]);
+    } else {
+        model = new Model("obj/african_head.obj");
     }
+
+    TGAImage image(width, height, TGAImage::RGB);
+    Vec3f light_dir(0,0,-1);
+    for (int i=0; i<model->nfaces(); i++) {
+        std::vector<int> face = model->face(i);
+        Vec2i screen_coords[3];
+        Vec3f world_coords[3];
+        for (int j=0; j<3; j++) {
+            Vec3f v = model->vert(face[j]);
+            screen_coords[j] = Vec2i((v.x+1.)*width/2., (v.y+1.)*height/2.);
+            world_coords[j]  = v;
+        }
+        Vec3f n = cross((world_coords[2]-world_coords[0]),(world_coords[1]-world_coords[0]));
+        n.normalize();
+        float intensity = n*light_dir;
+        if (intensity>0) {
+            Drawer::triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+        }
+    }
+
+    image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
+    image.write_tga_file("output.tga");
+    delete model;
     return 0;
 }
