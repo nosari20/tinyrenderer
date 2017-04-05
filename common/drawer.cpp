@@ -138,3 +138,58 @@ void Drawer::triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &
     }
 
 }
+
+
+void Drawer::triangle(const Vec2f pts, float *z_buffer, TGAImage &image, const TGAColor color){
+    Vec2i bboxmin(image.get_width()-1,  image.get_height()-1);
+    Vec2i bboxmax(0, 0);;
+    for (int i=0; i<3; i++) {
+        bboxmin.x = std::min(bboxmin.x, pts[i].x);
+        bboxmin.x = std::min(bboxmin.y, pts[i].y);
+
+        bboxmax.x = std::max(bboxmax.x, pts[i].x);
+        bboxmax.x = std::min(bboxmax.y, pts[i].y);
+    }
+
+    auto in_triangle = [](Vec2i p, Vec2i p0, Vec2i p1, Vec2i p2) -> bool{
+
+        Vec3f u = Vec3f(p1.x-p0.x, p1.y-p0.y, 0);
+        Vec3f v = Vec3f(p2.x-p0.x, p2.y-p0.y, 0);
+        Vec3f w = Vec3f(p.x-p0.x, p.y-p0.y, 0);
+
+        Vec3f vw = cross(v,w);
+        Vec3f vu = cross(v,u);
+
+        if (dot(vw, vu) < 0)
+            return false;
+
+
+        Vec3f uw = cross(u,w);
+        Vec3f uv = cross(u,v);
+        if (dot(uw, uv) < 0)
+            return false;
+
+
+        double luv = sqrt(pow(uv.x,2)+pow(uv.y,2)+pow(uv.z,2));
+        double lvw = sqrt(pow(vw.x,2)+pow(vw.y,2)+pow(vw.z,2));
+        double luw = sqrt(pow(uw.x,2)+pow(uw.y,2)+pow(uw.z,2));
+
+        float denom = luv;
+        float r = lvw / denom;
+        float t = luw / denom;
+
+
+        return (r + t <= 1);
+    };
+
+
+    Vec3f P;
+    for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
+        for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
+            if (in_triangle(P,t0,t1,t2)){
+                image.set(P.x, P.y, color);
+            }
+
+        }
+    }
+}
