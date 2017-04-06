@@ -33,26 +33,35 @@ int main(int argc, char** argv) {
     }
 
     float *zbuffer = new float[width*height];
-    Vec3f light_dir(0,0,-1);
 
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
 
 
     TGAImage image(width, height, TGAImage::RGB);
+    Shader shader;
+    shader.model = model;
+
+    Vec3f light_dir = Vec3f(1,1,1).normalize();
+    shader.light_dir = light_dir;
+
     for (int i=0; i<model->nfaces(); i++) {
         std::vector<int> face = model->face(i);
         Vec3f pts_s[3];
         Vec3f pts_w[3];
-        for (int i=0; i<3; i++){
-            pts_s[i] = world2screen(model->vert(face[i]));
-            pts_w[i] = model->vert(face[i]);
+
+        for (int j=0; j<3; j++){
+            pts_s[j] = world2screen(model->vert(face[j]));
+            pts_w[j] = model->vert(face[j]);
+            shader.varying_uv[j] = model->uv(i, j);
+            shader.varying_inty[j] = model->norm(i, j)*light_dir;
         }
 
         Vec3f n = cross((pts_w[2]-pts_w[0]),(pts_w[1]-pts_w[0]));
         n.normalize();
         float intensity = n*light_dir;
-        if (intensity>0)
-            Drawer::triangle(pts_s, zbuffer, image, model, intensity);
+
+        Drawer::triangle(pts_s, zbuffer, image, shader);
+
     }
     image.flip_vertically();
     image.write_tga_file("output.tga");
