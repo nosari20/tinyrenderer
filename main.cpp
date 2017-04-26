@@ -29,39 +29,34 @@ int main(int argc, char** argv) {
     if (2==argc) {
         model = new Model(argv[1]);
     } else {
-        model = new Model("obj/african_head.obj");
+        model = new Model("african_head/african_head.obj");
     }
 
     float *zbuffer = new float[width*height];
+    Vec3f light_dir(0,0,-1);
 
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
 
 
     TGAImage image(width, height, TGAImage::RGB);
-    Shader shader;
-    shader.model = model;
-
-    Vec3f light_dir = Vec3f(1,1,1).normalize();
-    shader.light_dir = light_dir;
-
     for (int i=0; i<model->nfaces(); i++) {
         std::vector<int> face = model->face(i);
         Vec3f pts_s[3];
         Vec3f pts_w[3];
-
-        for (int j=0; j<3; j++){
-            pts_s[j] = world2screen(model->vert(face[j]));
-            pts_w[j] = model->vert(face[j]);
-            shader.varying_uv[j] = model->uv(i, j);
-            shader.varying_inty[j] = model->norm(i, j)*light_dir;
+        for (int i=0; i<3; i++){
+            pts_s[i] = world2screen(model->vert(face[i]));
+            pts_w[i] = model->vert(face[i]);
+        }
+        Vec2f uv[3];
+        for (int k=0; k<3; k++) {
+            uv[k] = model->uv(i, k);
         }
 
         Vec3f n = cross((pts_w[2]-pts_w[0]),(pts_w[1]-pts_w[0]));
         n.normalize();
         float intensity = n*light_dir;
-
-        Drawer::triangle(pts_s, zbuffer, image, shader);
-
+        if (intensity>0)
+            Drawer::triangle(pts_s, uv, zbuffer, image, model, intensity);
     }
     image.flip_vertically();
     image.write_tga_file("output.tga");
