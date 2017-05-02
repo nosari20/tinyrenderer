@@ -63,7 +63,7 @@ Matrix viewport(int x, int y, int w, int h) {
 }
 
 Matrix Vec3f2Matrix(Vec3f v){
-
+    
 }
 
 int main(int argc, char** argv) {

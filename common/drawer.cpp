@@ -195,8 +195,10 @@ void Drawer::triangle(const Vec2f *pts, TGAImage &image, const TGAColor color){
 }
 
 
-void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TGAColor color){
-    Vec2f size(image.get_width()-1, image.get_height()-1);
+
+
+void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, const TGAColor color, const float intensity){
+    Vec2f size(image.get_width(), image.get_height());
     Vec2f bboxmin(size.x,  size.y);
     Vec2f bboxmax(0, 0);;
     for (int i=0; i<3; i++) {
@@ -206,7 +208,6 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
         bboxmax.x = std::max(bboxmax.x, pts[i].x);
         bboxmax.y = std::max(bboxmax.y, pts[i].y);
     }
-
 
     auto in_triangle = [](Vec3f p, Vec3f p0, Vec3f p1, Vec3f p2, Vec3f &bc) -> bool{
 
@@ -219,19 +220,20 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
         Vec3f vw = cross(v,w);
         Vec3f vu = cross(v,u);
 
-        if (dot(vw, vu) < 0)
+        if (vw*vu < -20000)
             return false;
 
 
         Vec3f uw = cross(u,w);
         Vec3f uv = cross(u,v);
-        if (dot(uw, uv) < 0)
+
+        if (uw*uv < -20000)
             return false;
 
 
-        double luv = sqrt(pow(uv.x,2)+pow(uv.y,2)+pow(uv.z,2));
-        double lvw = sqrt(pow(vw.x,2)+pow(vw.y,2)+pow(vw.z,2));
-        double luw = sqrt(pow(uw.x,2)+pow(uw.y,2)+pow(uw.z,2));
+        float luv = sqrt(pow(uv.x,2)+pow(uv.y,2)+pow(uv.z,2));
+        float lvw = sqrt(pow(vw.x,2)+pow(vw.y,2)+pow(vw.z,2));
+        float luw = sqrt(pow(uw.x,2)+pow(uw.y,2)+pow(uw.z,2));
 
         float denom = luv;
         float r = lvw / denom;
@@ -239,8 +241,9 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
 
         bc = Vec3f(1-r-t, r, t);
 
-        return (r + t <= 1);
+        return (r + t <= 1.025);
     };
+
 
 
 
@@ -248,20 +251,31 @@ void Drawer::triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TG
     for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
         for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
             Vec3f ptscopy[3];
-            for (int i=0; i<3; i++) ptscopy[i] = Vec3f(pts[i].x, pts[i].y, 0);
+            for (int i=0; i<3; i++) ptscopy[i] = Vec3f(int(pts[i].x+.5), int(pts[i].y+.5), 0);
+
             P.z = 0;
             Vec3f bc;
-            if (in_triangle(P,ptscopy[0],ptscopy[1],ptscopy[2],bc)) {
-                for (int i=0; i<3; i++) P.z += bc[i]*pts[i].z;
-                if(1 || P.z > zbuffer[int(P.x+P.y*size.x)]){
-                    zbuffer[int(P.x+P.y*size.x)] = P.z;
-                    image.set(P.x, P.y, color);
+
+            //if (!(bc.x<-.021 || bc.y<-.021 || bc.z<-.021)) {
+            if (in_triangle(P,ptscopy[0], ptscopy[1], ptscopy[2], bc)) {
+                if(P.x >= 0 && P.y >= 0 && P.x < size.x && P.y < size.y){
+
+                    for (int i=0; i<3; i++) P.z += bc[i]*pts[i].z;
+
+                    Vec2f tex = Vec2f(0, 0);
+                    for (int i=0; i<3; i++) tex = tex + uv[i]*bc[i];
+
+                    if(P.z > zbuffer[int(P.x)+int(P.y)*int(size.x)]){
+                        zbuffer[int(P.x)+int(P.y)*int(size.x)] = P.z;
+                        image.set(P.x, P.y, color*(intensity));
+                    }
+
                 }
             }
         }
     }
-}
 
+}
 void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, Model *model, const float intensity){
     Vec2f size(image.get_width(), image.get_height());
     Vec2f bboxmin(size.x,  size.y);
@@ -310,11 +324,13 @@ void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage
     };
 
 
+    /*
     auto barycentric = [](Vec3f *pts, Vec3f P) -> Vec3f {
         Vec3f u = cross(Vec3f(pts[2][0]-pts[0][0], pts[1][0]-pts[0][0], pts[0][0]-P[0]), Vec3f(pts[2][1]-pts[0][1], pts[1][1]-pts[0][1], pts[0][1]-P[1]));
         if (std::abs(u[2])<1) return Vec3f(-1,1,1); // triangle is degenerate, in this case return smth with negative coordinates
         return Vec3f(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
     } ;
+    */
 
 
 
@@ -325,7 +341,7 @@ void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage
             for (int i=0; i<3; i++) ptscopy[i] = Vec3f(int(pts[i].x+.5), int(pts[i].y+.5), 0);
 
             P.z = 0;
-            Vec3f bc = barycentric(ptscopy, P);
+            Vec3f bc;
 
             //if (!(bc.x<-.021 || bc.y<-.021 || bc.z<-.021)) {
             if (in_triangle(P,ptscopy[0], ptscopy[1], ptscopy[2], bc)) {

@@ -13,7 +13,7 @@ public:
     static void line(const Vec2i t0, const Vec2i t1, TGAImage &image, const TGAColor color);
     static void triangle(const Vec2i t0, const Vec2i t1, const Vec2i t2, TGAImage &image, const TGAColor color);
     static void triangle(const Vec2f *pts, TGAImage &image, const TGAColor color);
-    static void triangle(const Vec3f *pts, float *zbuffer,TGAImage &image, const TGAColor color);
+    static void triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, const TGAColor color, const float intensity);
     static void triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, Model *model, const float intensity);
 };
 
