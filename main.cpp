@@ -23,7 +23,8 @@ const int height = 1024;
 const int depth = 255;
 
 Vec3f light_dir(0,0,-1);
-Vec3f camera(0,0,3);
+Vec3f eye(1,1,3);
+Vec3f center(0,0,0);
 
 
 
@@ -50,8 +51,23 @@ void transform(Vec3f *pts, int size = 3){
 
 
 
+Matrix lookat(Vec3f eye, Vec3f center, Vec3f up) {
+    Vec3f z = (eye-center).normalize();
+    Vec3f x = cross(up,z).normalize();
+    Vec3f y = cross(z,x).normalize();
+    Matrix res = Matrix::identity(4);
+    for (int i=0; i<3; i++) {
+        res[0][i] = x[i];
+        res[1][i] = y[i];
+        res[2][i] = z[i];
+        res[i][3] = -center[i];
+    }
+    return res;
+}
+
+
 Matrix viewport(int x, int y, int w, int h) {
-    Matrix m = Matrix::identity();
+    Matrix m = Matrix::identity(4);
     m[0][3] = x+w/2.f;
     m[1][3] = y+h/2.f;
     m[2][3] = depth/2.f;
@@ -66,6 +82,8 @@ Matrix Vec3f2Matrix(Vec3f v){
 
 }
 
+
+
 int main(int argc, char** argv) {
     if (2==argc) {
         model = new Model(argv[1]);
@@ -77,15 +95,17 @@ int main(int argc, char** argv) {
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
 
 
+    Matrix ModelView  = lookat(eye, center, Vec3f(0,1,0));
+    Matrix Projection = Matrix::identity(4);
     Matrix ViewPort   = viewport(width/8, height/8, width*3/4, height*3/4);
+    Projection[3][2] = -1.f/(eye-center).norm();
 
-    Matrix Projection = Matrix::identity();
-    Projection[3][2] = -1.f/camera.z;
 
-    Matrix ModelView;
-
-    Matrix View;
-
+    std::cerr << ModelView << std::endl;
+    std::cerr << Projection << std::endl;
+    std::cerr << ViewPort << std::endl;
+    Matrix z = (ViewPort*Projection*ModelView);
+    std::cerr << z << std::endl;
 
 
 
@@ -100,11 +120,19 @@ int main(int argc, char** argv) {
         for (int i=0; i<3; i++){
             pts_w[i] = model->vert(face[i]);
 
+            /*
+            Matrix m = ViewPort*Projection*ModelView*Matrix(pts_w[i]);
+
+            pts_w[i] =  Vec3f((m[0][0]/m[3][0]), (m[1][0]/m[3][0]), (m[2][0]/m[3][0]));
+
+            */
+
         }
         transform(pts_w,3);
         for (int i=0; i<3; i++){
+
             pts_s[i] = world2screen(pts_w[i]);
-            pts_s[i] =  Vec3f(ViewPort*Projection*ModelView*View*v);
+
 
         }
         Vec2f uv[3];
@@ -112,14 +140,13 @@ int main(int argc, char** argv) {
             uv[k] = model->uv(i, k);
         }
 
-        transform(pts_s,3);
 
         Vec3f n = cross((pts_w[2]-pts_w[0]),(pts_w[1]-pts_w[0]));
         n.normalize();
         float intensity = n*light_dir;
         if (intensity>0){
-            //Drawer::triangle(pts_s, uv, zbuffer, image, model, intensity);
-            Drawer::triangle(pts_s, uv, zbuffer, image, white, intensity);
+            Drawer::triangle(pts_s, uv, zbuffer, image, model, light_dir);
+            //Drawer::triangle(pts_s, uv, zbuffer, image,model, white, light_dir);
             //if(i%100 == 0)
             //image.write_tga_file(foo.str().c_str());
         }

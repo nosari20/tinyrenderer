@@ -197,7 +197,7 @@ void Drawer::triangle(const Vec2f *pts, TGAImage &image, const TGAColor color){
 
 
 
-void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, const TGAColor color, const float intensity){
+void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, Model *model, const TGAColor color, const Vec3f light_dir){
     Vec2f size(image.get_width(), image.get_height());
     Vec2f bboxmin(size.x,  size.y);
     Vec2f bboxmax(0, 0);;
@@ -267,7 +267,10 @@ void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage
 
                     if(P.z > zbuffer[int(P.x)+int(P.y)*int(size.x)]){
                         zbuffer[int(P.x)+int(P.y)*int(size.x)] = P.z;
-                        image.set(P.x, P.y, color*(intensity));
+
+
+
+                        image.set(P.x, P.y, color*(-(light_dir*(model->normal(tex)).normalize())));
                     }
 
                 }
@@ -276,7 +279,7 @@ void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage
     }
 
 }
-void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, Model *model, const float intensity){
+void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage &image, Model *model , const Vec3f light_dir){
     Vec2f size(image.get_width(), image.get_height());
     Vec2f bboxmin(size.x,  size.y);
     Vec2f bboxmax(0, 0);;
@@ -355,7 +358,7 @@ void Drawer::triangle(const Vec3f *pts, const Vec2f *uv, float *zbuffer,TGAImage
                     if(P.z > zbuffer[int(P.x)+int(P.y)*int(size.x)]){
                         zbuffer[int(P.x)+int(P.y)*int(size.x)] = P.z;
                         TGAColor oc = model->diffuse(tex);
-                        image.set(P.x, P.y, oc*(intensity));
+                        image.set(P.x, P.y, oc*(-(light_dir*(model->normal(tex)).normalize())));
                     }
 
                 }
